@@ -1,10 +1,29 @@
-﻿using UnityEditor;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
+using UnityEngine.Networking;
+using System.IO;
 
-public class Board : Singleton<Board>
+public class Board : NetworkBehaviour
 {
     public Transform Card;
+    private string[] finalWords;
+
+    public List<string> ProcessWordList()
+    {
+        List<string> words = new List<string>();
+        string f = Application.dataPath + "\\words.txt";
+        using (StreamReader r = new StreamReader(f))
+        {
+
+            string line;
+            while ((line = r.ReadLine()) != null)
+            {
+                words.Add(line);
+            }
+        }
+        return words;
+    }
 
     /// <summary>
     /// 5x5 grid
@@ -67,6 +86,25 @@ public class Board : Singleton<Board>
             indexList[indexList.Length - 1 - i] = number;
         }
 
+        //create list of words
+        List<string> wordList = ProcessWordList();
+        string[] wordArray = wordList.ToArray();
+        finalWords = new string[indexList.Length];
+        //shuffle and pick 25 words
+        for (int i = 0; i < indexList.Length; i++)
+        {
+            //select index from array
+            int index = Random.Range(0, wordArray.Length - i);
+            string word = wordArray[index];
+            //swap words
+            wordArray[index] = wordArray[wordArray.Length - 1 - i];
+            wordArray[wordArray.Length - 1 - i] = word;
+            //pick final words
+            finalWords[i] = word;
+        } 
+        
+
+
         //run position assignment
         for (int i = 0; i < 5; i++)
         {
@@ -85,23 +123,33 @@ public class Board : Singleton<Board>
             for (int j = 0; j < 5; j++)
             {
                 Transform currentCard = Instantiate(Card, new Vector3(i, 0, j), Quaternion.identity) as Transform;
+                currentCard.SetParent(parent);
+                //give card an index to identify the block
                 switch(grid[i,j])
                 {
                     case 0:
                         break;
                     case 1:
                         currentCard.GetComponent<Renderer>().material.color = new Color(1, 0, 0);
+                        currentCard.GetComponent<Cards>().CardType = grid[i, j];
                         break;
                     case 2:
                         currentCard.GetComponent<Renderer>().material.color = new Color(0, 0, 1);
+                        currentCard.GetComponent<Cards>().CardType = grid[i, j];
                         break;
                     case 3 :
                         currentCard.GetComponent<Renderer>().material.color = new Color(0, 1, 1);
+                        currentCard.GetComponent<Cards>().CardType = grid[i, j];
                         break;
                     case 4 :
                         currentCard.GetComponent<Renderer>().material.color = new Color(0, 0, 0);
+                        currentCard.GetComponent<Cards>().CardType = grid[i, j];
                         break;
                 }
+                //assign word to card
+                currentCard.GetComponent<Cards>().Word = finalWords[i * 5 + j];
+                //spawn shit on clients as well
+                NetworkServer.Spawn(currentCard.gameObject);
             }
         }   
     }
