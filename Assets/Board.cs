@@ -8,12 +8,68 @@ public class Board : NetworkBehaviour
 {
     public Transform Card;
     private string[] finalWords;
+    public TextAsset Wordlist;
 
+    [SyncVar]
+    public GameObject CommandTest;
+
+    public void Update()
+    {
+        if (Input.GetKeyUp(KeyCode.L))
+        {
+            Debug.Log("please delete");
+            CommandTest = GameObject.Find("cmdtest(Clone)");
+            Cmd_DestroyThis(CommandTest);
+        }
+        if(Input.GetKeyUp(KeyCode.K))
+        {
+            Instantiate(CommandTest);
+            NetworkServer.Spawn(CommandTest);
+        }
+        if (Input.GetKeyUp(KeyCode.P))
+        {
+            RpcTest();
+        }
+        if (Input.GetKeyUp(KeyCode.O))
+        {
+            CmdPostTest();
+        }
+        if (Input.GetKeyUp(KeyCode.I))
+        {
+            CmdPostTest();
+        }
+    }
+
+    [ClientRpc]
+    public void RpcTest()
+    {
+        Debug.Log("Penis");
+    }
+
+    [Command]
+    public void CmdPostTest()
+    {
+        Debug.Log("PenisFromClient");
+    }
+
+
+    [Command]
+    void Cmd_DestroyThis(GameObject please)
+    {
+        GameObject test = Instantiate(Card).gameObject;
+        NetworkServer.Spawn(test);
+        NetworkServer.Destroy(please);
+    }
+
+    /// <summary>   
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public List<string> ProcessWordList()
     {
         List<string> words = new List<string>();
-        string f = Application.dataPath + "\\words.txt";
-        using (StreamReader r = new StreamReader(f))
+        TextAsset f = Resources.Load("words") as TextAsset;
+        using (StringReader r = new StringReader(f.text))
         {
 
             string line;
@@ -130,24 +186,25 @@ public class Board : NetworkBehaviour
                     case 0:
                         break;
                     case 1:
-                        currentCard.GetComponent<Renderer>().material.color = new Color(1, 0, 0);
+                        //currentCard.GetComponent<Renderer>().material.color = new Color(1, 0, 0);
                         currentCard.GetComponent<Cards>().CardType = grid[i, j];
                         break;
                     case 2:
-                        currentCard.GetComponent<Renderer>().material.color = new Color(0, 0, 1);
+                        //currentCard.GetComponent<Renderer>().material.color = new Color(0, 0, 1);
                         currentCard.GetComponent<Cards>().CardType = grid[i, j];
                         break;
                     case 3 :
-                        currentCard.GetComponent<Renderer>().material.color = new Color(0, 1, 1);
+                        //currentCard.GetComponent<Renderer>().material.color = new Color(0, 1, 1);
                         currentCard.GetComponent<Cards>().CardType = grid[i, j];
                         break;
                     case 4 :
-                        currentCard.GetComponent<Renderer>().material.color = new Color(0, 0, 0);
+                        //currentCard.GetComponent<Renderer>().material.color = new Color(0, 0, 0);
                         currentCard.GetComponent<Cards>().CardType = grid[i, j];
                         break;
                 }
                 //assign word to card
                 currentCard.GetComponent<Cards>().Word = finalWords[i * 5 + j];
+                currentCard.GetComponent<Cards>().CardID = i * 5 + j;
                 //spawn shit on clients as well
                 NetworkServer.Spawn(currentCard.gameObject);
             }
