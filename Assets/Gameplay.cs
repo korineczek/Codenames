@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 
 public class Gameplay : NetworkBehaviour {
 
@@ -12,6 +13,10 @@ public class Gameplay : NetworkBehaviour {
 
     [SyncVar] public int ScoreRed = 0;
     [SyncVar] public int ScoreBlue = 0;
+    [SyncVar] public bool GameStarted = false;
+    [SyncVar] public int StartingTeam = 3;
+
+    private Interface gameUI;
 
 	// Use this for initialization
 	void Start ()
@@ -26,18 +31,33 @@ public class Gameplay : NetworkBehaviour {
 
 	    if (Input.GetKeyUp(KeyCode.G))
 	    {
+            //Turn on UI monitoring for server and client
+	        gameUI = GameObject.Find("UI").GetComponent<Interface>();
+	        gameUI.StartCoroutine("UiRefresh");
+            RpcUiRefresh();
+
+            //Generate Board
             Debug.Log("generating shit");
-            board = GetComponent<Board>().GenerateGrid(board, 10);
+            //Set starting teams
+	        StartingTeam = Random.Range(0, 2);
+
+            board = GetComponent<Board>().GenerateGrid(board, 10, StartingTeam);
             GetComponent<Board>().SpawnBoard(board, this.transform);
+
 	        List<string> testlist = GetComponent<Board>().ProcessWordList();
 	    }
 	}
 
-    [ClientRpc]
-    public void RpcDelete(GameObject obj)
+    [Server]
+    public void Delete(GameObject obj)
     {
         NetworkIdentity.Destroy(obj);
     }
 
+    [ClientRpc]
+    public void RpcUiRefresh()
+    {
+        GameObject.Find("UI").GetComponent<Interface>().StartCoroutine("UiRefresh");
+    }
 
 }

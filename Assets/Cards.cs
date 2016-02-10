@@ -11,7 +11,13 @@ public class Cards : NetworkBehaviour
     [SyncVar] public string Word;
     [SyncVar] public int CardID;
 
+    private Gameplay gameplay;
+
 	void Start () {
+
+        //grab references
+	    gameplay = GameObject.Find("BoardGenerator").GetComponent<Gameplay>();
+
         //set renderer color for master spy
 	    if (!transform.GetComponent<NetworkIdentity>().isServer)
 	    {
@@ -25,9 +31,6 @@ public class Cards : NetworkBehaviour
 	            case 2:
 	                GetComponent<Renderer>().material.color = new Color(0, 0, 1);
 	                break;
-	            case 3:
-	                GetComponent<Renderer>().material.color = new Color(0, 1, 1);
-	                break;
 	            case 4:
 	                GetComponent<Renderer>().material.color = new Color(0, 0, 0);
 	                break;
@@ -38,17 +41,54 @@ public class Cards : NetworkBehaviour
 
 	}
 
-    [Command]
-    public void CmdSelectCard()
+
+    /// <summary>
+    /// Function for card selection. Reveals its true identity on the server and disables controls of the card on the client
+    /// </summary>
+    [ServerCallback]
+    public void TurnCard()
     {
-        NetworkIdentity.DestroyImmediate(this.gameObject);
-        GameObject.Find("BoardGenerator").GetComponent<Gameplay>().RpcDelete(this.gameObject);
+        //set card color to reveal true identity
+        switch (CardType)
+        {
+            case 0:
+                break;
+            case 1:
+                GetComponent<Renderer>().material.color = new Color(1, 0, 0);
+                break;
+            case 2:
+                GetComponent<Renderer>().material.color = new Color(0, 0, 1);
+                break;
+            case 3:
+                GetComponent<Renderer>().material.color = new Color(0, 1, 1);
+                break;
+            case 4:
+                GetComponent<Renderer>().material.color = new Color(0, 0, 0);
+                break;
+        }
+
+        //add up scores
+        if (CardType == 1)
+        {
+            gameplay.ScoreRed++;
+        }
+        else if (CardType == 2)
+        {
+            gameplay.ScoreBlue++;
+        }
+
+        //delete button
+        this.transform.GetChild(0).gameObject.SetActive(false);
+        RpcSelectCard();
     }
 
+    /// <summary>
+    /// RPC call to disable the button on client to indicate card selection
+    /// </summary>
     [ClientRpc]
     public void RpcSelectCard()
     {
-        NetworkIdentity.Destroy(this.gameObject);
+       this.transform.GetChild(0).gameObject.SetActive(false);  
     }
 
 }

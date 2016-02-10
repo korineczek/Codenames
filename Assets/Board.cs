@@ -10,57 +10,6 @@ public class Board : NetworkBehaviour
     private string[] finalWords;
     public TextAsset Wordlist;
 
-    [SyncVar]
-    public GameObject CommandTest;
-
-    public void Update()
-    {
-        if (Input.GetKeyUp(KeyCode.L))
-        {
-            Debug.Log("please delete");
-            CommandTest = GameObject.Find("cmdtest(Clone)");
-            Cmd_DestroyThis(CommandTest);
-        }
-        if(Input.GetKeyUp(KeyCode.K))
-        {
-            Instantiate(CommandTest);
-            NetworkServer.Spawn(CommandTest);
-        }
-        if (Input.GetKeyUp(KeyCode.P))
-        {
-            RpcTest();
-        }
-        if (Input.GetKeyUp(KeyCode.O))
-        {
-            CmdPostTest();
-        }
-        if (Input.GetKeyUp(KeyCode.I))
-        {
-            CmdPostTest();
-        }
-    }
-
-    [ClientRpc]
-    public void RpcTest()
-    {
-        Debug.Log("Penis");
-    }
-
-    [Command]
-    public void CmdPostTest()
-    {
-        Debug.Log("PenisFromClient");
-    }
-
-
-    [Command]
-    void Cmd_DestroyThis(GameObject please)
-    {
-        GameObject test = Instantiate(Card).gameObject;
-        NetworkServer.Spawn(test);
-        NetworkServer.Destroy(please);
-    }
-
     /// <summary>   
     /// 
     /// </summary>
@@ -90,21 +39,22 @@ public class Board : NetworkBehaviour
     /// 7 bystanders
     /// </summary>
     /// <param name="input"></param>
+    /// <param name="seed"></param>
+    /// <param name="startingTeam">starting team influences the amounts of agents for each team. The team that begins gets one agent extra</param>
     /// <returns></returns>
-    public int[,] GenerateGrid(int[,] input, int seed)
+    public int[,] GenerateGrid(int[,] input, int seed, int startingTeam)
     {
-        //set seed to required one
+        //set seed to required one only enable for development purposes
         //Random.seed = seed;
 
         //set counts for all variables
-        const int redCount = 8;
-        const int blueCount = 8;
-        const int doubleCount = 1;
+        int redCount = startingTeam == 0 ? 9 : 8;
+        int blueCount = startingTeam == 1 ? 9 : 8;
         const int assassinCount = 1;
         const int bystanderCount = 7;
 
         //create array
-        int[] indexList = new int[bystanderCount + redCount + blueCount + doubleCount + assassinCount];
+        int[] indexList = new int[bystanderCount + redCount + blueCount + assassinCount];
 
         //fill array
         for (int i = 0; i < indexList.Length; i++)
@@ -120,10 +70,6 @@ public class Board : NetworkBehaviour
             else if (i < bystanderCount + redCount + blueCount)
             {
                 indexList[i] = 2;
-            }
-            else if (i < bystanderCount + redCount + blueCount + doubleCount)
-            {
-                indexList[i] = 3;
             }
             else
             {
@@ -181,27 +127,7 @@ public class Board : NetworkBehaviour
                 Transform currentCard = Instantiate(Card, new Vector3(i, 0, j), Quaternion.identity) as Transform;
                 currentCard.SetParent(parent);
                 //give card an index to identify the block
-                switch(grid[i,j])
-                {
-                    case 0:
-                        break;
-                    case 1:
-                        //currentCard.GetComponent<Renderer>().material.color = new Color(1, 0, 0);
-                        currentCard.GetComponent<Cards>().CardType = grid[i, j];
-                        break;
-                    case 2:
-                        //currentCard.GetComponent<Renderer>().material.color = new Color(0, 0, 1);
-                        currentCard.GetComponent<Cards>().CardType = grid[i, j];
-                        break;
-                    case 3 :
-                        //currentCard.GetComponent<Renderer>().material.color = new Color(0, 1, 1);
-                        currentCard.GetComponent<Cards>().CardType = grid[i, j];
-                        break;
-                    case 4 :
-                        //currentCard.GetComponent<Renderer>().material.color = new Color(0, 0, 0);
-                        currentCard.GetComponent<Cards>().CardType = grid[i, j];
-                        break;
-                }
+                currentCard.GetComponent<Cards>().CardType = grid[i, j];
                 //assign word to card
                 currentCard.GetComponent<Cards>().Word = finalWords[i * 5 + j];
                 currentCard.GetComponent<Cards>().CardID = i * 5 + j;
