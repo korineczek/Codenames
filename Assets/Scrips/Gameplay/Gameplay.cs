@@ -25,17 +25,16 @@ public class Gameplay : NetworkBehaviour {
         RpcUiRefresh();
 
         //Generate Board
-        Debug.Log("generating shit");
         //Set starting teams
         StartingTeam = Random.Range(0, 2);
-
+        //generate board and spawnit
         board = GetComponent<Board>().GenerateGrid(board, 10, StartingTeam);
         GetComponent<Board>().SpawnBoard(board, this.transform);
-
-        List<string> testlist = GetComponent<Board>().ProcessWordList();
     }
 
-
+    /// <summary>
+    /// RPC call to client that starts the monititoring of the game UI
+    /// </summary>
     [ClientRpc]
     public void RpcUiRefresh()
     {

@@ -105,8 +105,6 @@ public class Board : NetworkBehaviour
             finalWords[i] = word;
         } 
         
-
-
         //run position assignment
         for (int i = 0; i < 5; i++)
         {
@@ -118,6 +116,11 @@ public class Board : NetworkBehaviour
         return input;
     }
 
+    /// <summary>
+    /// Function for spawning and displaying the board.
+    /// </summary>
+    /// <param name="grid">grid of indices to use for generation</param>
+    /// <param name="parent">parent object for the cards</param>
     public void SpawnBoard(int[,] grid, Transform parent)
     {
         for (int i = 0; i < 5; i++)

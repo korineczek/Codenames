@@ -13,7 +13,15 @@ public class Cards : NetworkBehaviour
 
     private Gameplay gameplay;
 
+    /// <summary>
+    /// Disables certain functionalities and sets card identity based on whether it is a server or a client
+    /// </summary>
 	void Start () {
+        //Disable Card button functionality for client
+	    if (!transform.GetComponent<NetworkIdentity>().isServer)
+	    {
+	        this.transform.GetChild(0).GetChild(0).GetComponent<Button>().interactable = false;
+	    }
 
         //grab references
 	    gameplay = GameObject.Find("BoardGenerator").GetComponent<Gameplay>();
@@ -38,7 +46,6 @@ public class Cards : NetworkBehaviour
 	    }
 	    //set text
 	    transform.GetChild(0).GetChild(0).GetComponentInChildren<Text>().text = Word;
-
 	}
 
 
